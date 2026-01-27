@@ -3,3 +3,8 @@ numpy
 yfinance
 pyyaml
 ta
+scikit-learn
+fastapi
+uvicorn
+streamlit
+plotly
