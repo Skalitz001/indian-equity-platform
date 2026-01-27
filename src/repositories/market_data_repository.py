@@ -6,11 +6,6 @@ logger = setup_logger(__name__)
 
 
 class MarketDataRepository:
-    """
-    Repository for accessing historical market data.
-    Abstracts away file-system access.
-    """
-
     def __init__(self, base_dir: str = "data/raw"):
         self.base_dir = Path(base_dir)
 
@@ -29,4 +24,16 @@ class MarketDataRepository:
             raise FileNotFoundError(f"No data found for ticker: {ticker}")
 
         logger.info(f"Loading data for {ticker}")
-        return pd.read_csv(path, parse_dates=["Date"])
+        df = pd.read_csv(path, parse_dates=["Date"])
+
+        
+        numeric_cols = ["Open", "High", "Low", "Close", "Volume"]
+        for col in numeric_cols:
+            if col in df.columns:
+                df[col] = pd.to_numeric(df[col], errors="coerce")
+
+        # Optional sanity check
+        if df[numeric_cols].isnull().any().any():
+            logger.warning(f"NaNs detected after type coercion for {ticker}")
+
+        return df
