@@ -1,0 +1,10 @@
+nse:
+  tickers:
+    - RELIANCE.NS
+    - TCS.NS
+    - INFY.NS
+    - HDFCBANK.NS
+    - ICICIBANK.NS
+  start_date: "2014-01-01"
+  end_date: "2025-01-01"
+  interval: "1d"
