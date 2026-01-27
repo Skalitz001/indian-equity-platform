@@ -16,3 +16,6 @@ data/processed/
 # IDE
 .vscode/
 .idea/
+
+# Artifacts
+artifacts/
