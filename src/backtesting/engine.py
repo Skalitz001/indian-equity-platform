@@ -20,10 +20,24 @@ class BacktestEngine:
         """
         Run backtest on provided dataframe and signal.
 
-        signal:
-            1 = long
-            0 = flat
+        Parameters
+        ----------
+        df : pd.DataFrame
+            DataFrame containing at least a 'log_return' column.
+        signal : pd.Series
+            Trading signal aligned with df.index.
+            1 = long, 0 = flat.
+
+        Returns
+        -------
+        pd.DataFrame
+            DataFrame with positions, strategy returns, and equity curve.
         """
+        if not isinstance(signal, pd.Series):
+            raise TypeError(
+                "signal must be a pandas Series with index aligned to df"
+            )
+
         result = df.copy()
 
         # Position enters on next bar (no look-ahead)
@@ -32,10 +46,12 @@ class BacktestEngine:
         # Strategy returns
         result["strategy_return"] = (
             result["position"] * result["log_return"]
-            - self.transaction_cost * result["position"].diff().abs().fillna(0)
+            - self.transaction_cost
+            * result["position"].diff().abs().fillna(0)
         )
 
         # Equity curve
         result["equity_curve"] = (1 + result["strategy_return"]).cumprod()
 
         return result
+

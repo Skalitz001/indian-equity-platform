@@ -10,7 +10,7 @@ RAW_DIR = Path("data/raw")
 
 class NSEDownloader:
     def __init__(self, config_path="configs/data.yaml"):
-        self.config = load_config(config_path)["nse"]
+        self.config = load_config(config_path)
 
     def download_one(self, ticker: str):
         logger.info(f"Downloading {ticker}")
@@ -18,7 +18,7 @@ class NSEDownloader:
             ticker,
             start=self.config["start_date"],
             end=self.config["end_date"],
-            interval=self.config["interval"],
+            interval=self.config["frequency"],
             auto_adjust=True,
             progress=False,
         )

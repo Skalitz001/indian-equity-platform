@@ -1,5 +1,6 @@
 import pandas as pd
 from typing import List
+from src.validation.metrics import find_best_threshold
 
 
 class WalkForwardValidator:
@@ -45,12 +46,13 @@ class WalkForwardValidator:
 
             X_test = test_df[self.feature_columns]
 
-            # Retrain model
             self.model.train(X_train, y_train)
 
-            # Predict
-            proba = self.model.predict_proba(X_test)
-            fold_signals = (proba > self.threshold).astype(int)
+            train_proba = self.model.predict_proba(X_train)
+            best_threshold = find_best_threshold(y_train, train_proba)
+
+            test_proba = self.model.predict_proba(X_test)
+            fold_signals = (test_proba > best_threshold).astype(int)
 
             signals.iloc[train_end:test_end] = fold_signals
 

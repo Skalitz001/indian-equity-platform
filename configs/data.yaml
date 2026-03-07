@@ -1,10 +1,30 @@
-nse:
-  tickers:
-    - RELIANCE.NS
-    - TCS.NS
-    - INFY.NS
-    - HDFCBANK.NS
-    - ICICIBANK.NS
-  start_date: "2014-01-01"
-  end_date: "2025-01-01"
-  interval: "1d"
+# Data configuration for Indian Equity ML Platform
+
+market: nse
+
+data_source: yfinance
+
+start_date: "2015-01-01"
+end_date: null
+
+tickers:
+
+  # Information Technology
+  - TCS.NS
+  - INFY.NS
+  - HCLTECH.NS
+  - WIPRO.NS
+  - TECHM.NS
+
+  # Banking & Financial Services
+  - HDFCBANK.NS
+  - ICICIBANK.NS
+  - SBIN.NS
+  - AXISBANK.NS
+  - KOTAKBANK.NS
+
+data_directory: data/raw
+
+frequency: 1d
+
+adjusted_prices: true
