@@ -11,8 +11,14 @@ FEATURES = [
     "rsi",
     "momentum_10",
     "volatility_20",
+    "macd_hist",
+    "atr_14",
+    "vol_sma_5",
+    "roll_skew_20",
+    "roll_kurt_20",
+    "sma_diff",
+    "sma_ratio",
 ]
-
 
 def run():
 
