@@ -1,21 +1,66 @@
-# Python
+# Python bytecode and caches
 __pycache__/
 *.py[cod]
-*.egg-info/
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.pyre/
+.hypothesis/
+.cache/
 
-# Virtual environment
+# Virtual environments
 .venv/
+venv/
+env/
+ENV/
 
-# Data
-data/raw/
-data/processed/
+# Build and packaging outputs
+build/
+dist/
+*.egg-info/
+.eggs/
+*.egg
+pip-wheel-metadata/
 
-# OS
+# Test and coverage outputs
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+.tox/
+.nox/
+
+# Local environment and secrets
+.env
+.env.*
+!.env.example
+.streamlit/secrets.toml
+
+# Logs and runtime files
+*.log
+logs/
+*.pid
+*.tmp
+*.temp
+
+# Local market data and generated datasets
+data/raw/*
+data/processed/*
+data/external/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!data/external/.gitkeep
+
+# Model artifacts, reports, and prediction exports
+artifacts/*
+!artifacts/.gitkeep
+
+# Notebook checkpoints
+.ipynb_checkpoints/
+
+# OS and editor files
 .DS_Store
-
-# IDE
+Thumbs.db
 .vscode/
 .idea/
-
-# Artifacts
-artifacts/

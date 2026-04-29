@@ -1,24 +1,18 @@
+import numpy as np
+
 from src.utils.config import load_config
 from src.repositories.market_data_repository import MarketDataRepository
-from src.analytics.features import *
+from src.analytics.experimental_features import (
+    DEFAULT_CLASSIFICATION_FEATURE_GROUP,
+    build_main_feature_frame,
+    resolve_main_feature_columns,
+)
 from src.models.logistic_model import DirectionLogisticModel
 from src.models.persistence import save_model
 
-FEATURES = [
-    "log_return",
-    "sma_20",
-    "sma_50",
-    "rsi",
-    "momentum_10",
-    "volatility_20",
-    "macd_hist",
-    "atr_14",
-    "vol_sma_5",
-    "roll_skew_20",
-    "roll_kurt_20",
-    "sma_diff",
-    "sma_ratio",
-]
+FEATURES = resolve_main_feature_columns(
+    DEFAULT_CLASSIFICATION_FEATURE_GROUP
+)
 
 def run():
 
@@ -31,17 +25,18 @@ def run():
 
         df = repo.load(ticker)
 
-        df = add_log_returns(df)
-        df = add_sma(df, 20)
-        df = add_sma(df, 50)
-        df = add_rsi(df)
-        df = add_momentum(df, 10)
-        df = add_volatility(df, 20)
+        df = build_main_feature_frame(
+            df,
+            feature_group=DEFAULT_CLASSIFICATION_FEATURE_GROUP,
+        )
 
-        df = df.dropna()
-
-        df["target"] = (df["log_return"].shift(-1) > 0).astype(int)
-        df = df.dropna()
+        next_log_return = df["log_return"].shift(-1)
+        df["target"] = np.where(
+            next_log_return.notna(),
+            (next_log_return > 0).astype(int),
+            np.nan,
+        )
+        df = df.dropna().reset_index(drop=True)
 
         X = df[FEATURES]
         y = df["target"]

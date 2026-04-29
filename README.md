@@ -1,358 +1,216 @@
- Indian Equity ML Trading Platform
-
-An end-to-end machine learning research platform for algorithmic trading in Indian equities.
-The project integrates data engineering, feature engineering, machine learning, walk-forward validation, backtesting, and interactive visualization into a modular software system.
-
-The objective is to investigate whether machine learning signals can improve risk-adjusted returns compared to a traditional Buy-and-Hold strategy.
-
-Key Features
-
-End-to-end ML trading research pipeline
-
-Automated market data ingestion
-
-Advanced feature engineering for financial time series
-
-Walk-forward training to prevent look-ahead bias
+# Indian Equity ML Signal Platform
 
-Sharpe-ratio-optimized signal thresholds
+This repository contains a research platform for Indian equity direction prediction, walk-forward model selection, strategy backtesting, and Streamlit-based signal review.
 
-Integrated vectorized backtesting engine
+The project supports two production-facing pipelines:
 
-Streamlit interactive dashboard
+- `Main Pipeline`: stock-only features used to predict the next trading session's close-to-close direction.
+- `GIFT-Aware Pipeline`: stock history plus pre-open GIFT Nifty features used to predict the same Indian cash-market session's open-to-close direction.
 
-Buy-and-Hold benchmark comparison
+The code is intended for research and education. It is not investment advice and should not be used for live trading without independent validation, execution modelling, and risk controls.
 
-Modular software-engineering architecture
+## Core Idea
 
-🏗 System Architecture
+GIFT Nifty trades on Singapore market hours and can provide information before the Indian cash market opens. The GIFT-aware pipeline is therefore framed as a pre-open signal for the Indian session:
 
-The platform is designed as a layered architecture separating responsibilities across modules.
+- Stock-derived features are shifted by one session so they are known before the Indian open.
+- Same-date GIFT rows are treated as completed Singapore-time pre-open observations, available before the NSE cash session.
+- The target is same-day Indian equity `open -> close` direction, not next-day `close -> close` direction.
+- The model records `gift_source_age_days` so stale GIFT observations are visible to the classifier.
 
-Market Data
-     │
-     ▼
-Data Ingestion
-     │
-     ▼
-Feature Engineering
-     │
-     ▼
-Machine Learning Model
-     │
-     ▼
-Signal Generation
-     │
-     ▼
-Backtesting Engine
-     │
-     ▼
-Interactive Dashboard
+This timing choice is deliberate. Injecting GIFT directly into the main next-day close-to-close target would mix incompatible information timing and weaken the interpretation of the model.
 
-This structure ensures:
+## Pipeline Summary
 
-modular experimentation
+| Pipeline | Inputs | Prediction Target | Signal Policy | Output Artifacts |
+| --- | --- | --- | --- | --- |
+| Main | Stock OHLCV | Next-session close-to-close up/down | Long/flat state machine with entry and exit thresholds | `artifacts/models/` |
+| GIFT-Aware | Stock OHLCV and GIFT Nifty OHLC | Same-session open-to-close up/down | Independent intraday participation threshold | `artifacts/gift_models/` |
+| Comparison | Main, aligned baseline, and GIFT outputs | Relative strategy and classifier performance | Report generation | `artifacts/gift_models/comparison/` |
 
-reproducible pipelines
+## Model Workflow
 
-clean separation of data, models, and UI
+Both pipelines follow the same high-level lifecycle:
 
- Project Structure
-indian-equity-platform
-│
-├── configs
-│   └── data.yaml
-│
-├── data
-│   └── raw
-│
-├── artifacts
-│   └── models
-│
-├── src
-│   ├── ingestion
-│   │   └── nse_downloader.py
-│   │
-│   ├── repositories
-│   │   └── market_data_repository.py
-│   │
-│   ├── analytics
-│   │   ├── features.py
-│   │   └── performance.py
-│   │
-│   ├── models
-│   │   ├── logistic_model.py
-│   │   ├── persistence.py
-│   │   └── train_walkforward.py
-│   │
-│   ├── backtesting
-│   │   └── engine.py
-│   │
-│   ├── validation
-│   │   └── metrics.py
-│   │
-│   └── utils
-│
-└── dashboard
-    └── app.py
- Stock Universe
+1. Load local OHLCV data.
+2. Build time-safe feature frames.
+3. Train logistic regression and random forest candidates.
+4. Evaluate out-of-fold probabilities with walk-forward validation.
+5. Search probability thresholds using backtest quality, not classifier accuracy alone.
+6. Fit final selected models and weighted ensembles.
+7. Save model, metadata, metrics, signal policy, holdout metrics, and prediction-store artifacts.
+8. Display current signals and historical diagnostics in the dashboard.
 
-The project evaluates 10 large-cap NSE equities across two sectors.
+Model ranking prioritizes:
 
-Information Technology
+1. Sharpe ratio.
+2. Total return.
+3. Maximum drawdown.
+4. Win rate.
+5. Trade activity and tie-breakers.
 
-TCS
+## Repository Layout
 
-Infosys
+```text
+dashboard/
+  app.py                  Streamlit entrypoint
+  controller.py           Dashboard state assembly and orchestration
+  views.py                Dashboard tabs, charts, tables, and metrics
+  outlook.py              Three-session outlook logic
+  pipeline.py             Dashboard data/model loading helpers
+  theme.py                Dashboard CSS and chart styling
+  figures.py              Reusable Plotly comparison figures
+  probability_display.py  Prediction label and probability formatting
 
-HCL Technologies
+src/
+  analytics/              Feature engineering and performance utilities
+  backtesting/            Main close-to-close backtest engine
+  gift_nifty/             GIFT ingestion, alignment, features, training, prediction
+  models/                 Main training scripts and benchmark experiments
+  repositories/           Local market data access
+  strategies/             Signal policy utilities
+  validation/             Metrics, walk-forward validation, prediction-store helpers
 
-Wipro
+data/
+  raw/                    Local stock and index OHLCV CSV files
+  external/               Normalized external inputs such as GIFT Nifty
 
-Tech Mahindra
+artifacts/
+  models/                 Main pipeline model artifacts
+  gift_models/            GIFT-aware model artifacts
+```
 
-Banking & Financial Services
+## Data Requirements
 
-HDFC Bank
+The current release path expects local CSV inputs:
 
-ICICI Bank
+- Stock and index files in `data/raw/`, for example `TCS.NS.csv` and `^NSEI.csv`.
+- GIFT Nifty history in `data/external/gift_nifty.csv`.
 
-State Bank of India
+The GIFT input must represent data that is available before the Indian cash market opens. If the source instead represents after-close values, the GIFT-aware alignment must be changed before training.
 
-Axis Bank
+## Environment Setup
 
-Kotak Mahindra Bank
+Create and activate a virtual environment:
 
-Using two sectors allows the model to be tested across different market regimes and economic drivers.
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
 
- Data Pipeline
+Install dependencies:
 
-Market data is downloaded using Yahoo Finance (yfinance).
+```bash
+python3 -m pip install -r requirements.txt
+```
 
-Example storage format:
+Run the test suite:
 
-data/raw/TCS.NS.csv
-data/raw/INFY.NS.csv
-data/raw/HDFCBANK.NS.csv
+```bash
+python3 -m pytest
+```
 
-Each dataset contains:
+## Training Artifacts
 
-Open
+Train the dashboard-facing artifacts in this order.
 
-High
+Train the main stock-only pipeline:
 
-Low
-
-Close
-
-Volume
-
-Date
-
- Feature Engineering
-
-The platform extracts several categories of financial features.
-
-Momentum Indicators
-
-Log Returns
-
-10-day Momentum
-
-MACD Histogram
-
-Trend Indicators
-
-20-day SMA
-
-50-day SMA
-
-SMA Difference
-
-SMA Ratio
-
-Volatility Features
-
-Rolling Volatility
-
-Average True Range (ATR)
-
-Market Regime Features
-
-Rolling Skewness
-
-Rolling Kurtosis
-
-Liquidity Indicators
-
-Volume Change
-
-Volume Moving Average
-
-These features allow the model to capture:
-
-price trends
-
-volatility regimes
-
-momentum bursts
-
-liquidity shifts
-
- Machine Learning Model
-
-The system uses Logistic Regression as the baseline classifier.
-
-Target variable:
-
-target = 1 if next-day return > 0
-target = 0 otherwise
-
-Model pipeline:
-
-Feature Scaling
-      ↓
-Logistic Regression
-      ↓
-Probability Calibration
-
-Predictions produce a probability:
-
-P(price_up)
- Walk-Forward Training
-
-The model uses time-series cross-validation to prevent data leakage.
-
-Train Window → Validate → Expand Window → Repeat
-
-During training:
-
-Regularization strength is tuned
-
-Probability calibration is applied
-
-Trading threshold is optimized using Sharpe Ratio
-
- Backtesting Engine
-
-The project includes a lightweight vectorized backtesting engine.
-
-Strategy assumptions:
-
-Long-only
-
-Trades executed next day
-
-Transaction costs included
-
-Daily rebalancing
-
-Metrics calculated:
-
-Total Return
-
-Annualized Return
-
-Sharpe Ratio
-
-Maximum Drawdown
-
-Win Rate
-
-Performance is compared against a Buy-and-Hold benchmark.
-
-Interactive Dashboard
-
-The Streamlit dashboard allows interactive exploration of model signals.
-
-Features include:
-
-stock selection
-
-probability-based signals
-
-price chart visualization
-
-equity curve plotting
-
-ML performance metrics
-
-strategy vs benchmark comparison
-
-Run dashboard:
-
-streamlit run dashboard/app.py
-Training the Model
-
-Train models with walk-forward validation:
-
+```bash
 python3 -m src.models.train_walkforward
+```
 
-Models are saved to:
+Train all GIFT-aware models:
 
-artifacts/models/
+```bash
+python3 -m src.gift_nifty.train_walkforward
+```
 
-Each artifact stores:
+Rebuild the GIFT comparison report:
 
-trained model
+```bash
+python3 -m src.gift_nifty.compare_pipelines
+```
 
-optimized threshold
+Optional: refresh the normalized GIFT Nifty CSV before training:
 
-hyperparameters
+```bash
+python3 -m src.gift_nifty.ingest_dhan
+```
 
-cross-validation Sharpe
+Optional: train one GIFT-aware ticker:
 
-▶ Running the Full Pipeline
-1️⃣ Download data
-python3 -m src.ingestion.nse_downloader
-2️⃣ Train models
-python3 -m src.models.train_walkforward
-3️⃣ Launch dashboard
+```bash
+python3 -m src.gift_nifty.train_walkforward --ticker TCS.NS
+```
+
+Optional: inspect the latest GIFT-aware prediction for one ticker:
+
+```bash
+python3 -m src.gift_nifty.predict --ticker TCS.NS --model-name ensemble
+```
+
+## Dashboard
+
+Run the Streamlit dashboard:
+
+```bash
 streamlit run dashboard/app.py
- Evaluation Metrics
+```
 
-Two evaluation layers are used.
+The dashboard provides:
 
-Machine Learning Metrics
+- Pipeline selection between main and GIFT-aware models.
+- Ticker and model selection.
+- Latest classifier call with `P(Up)` or `P(Down)` shown according to the predicted direction.
+- Red markers for down predictions and green markers for up predictions.
+- Probability and price curves.
+- Three-session outlook.
+- Strategy returns, drawdown, and benchmark comparisons.
+- Classifier metrics and recent model-ready rows.
+- Pipeline comparison charts for the GIFT-aware workflow.
 
-Accuracy
+## Validation Design
 
-Precision
+The project avoids random train/test splits for model selection. It uses chronological walk-forward validation so that each validation fold is evaluated after its training history.
 
-Recall
+Recent training code also writes holdout metrics and prediction-store files so future changes can be compared against saved prediction streams rather than only aggregate backtest summaries.
 
-F1 Score
+Key validation constraints:
 
-Trading Metrics
+- Stock features used by the GIFT pipeline are lagged by one session.
+- GIFT rows are merged backward by date and never from the future.
+- GIFT same-date rows are accepted only under the pre-open availability assumption.
+- Main and GIFT-native metrics are not directly comparable because they predict different targets on different execution schedules.
+- The valid GIFT comparison is against an aligned stock-only intraday baseline.
 
-Sharpe Ratio
+## Important Files
 
-Maximum Drawdown
+- `src/models/train_walkforward.py`: main walk-forward trainer.
+- `src/gift_nifty/train_walkforward.py`: GIFT-aware walk-forward trainer.
+- `src/gift_nifty/dataset.py`: stock and GIFT alignment rules.
+- `src/gift_nifty/features.py`: GIFT feature engineering.
+- `src/gift_nifty/compare_pipelines.py`: aligned comparison reporting.
+- `dashboard/controller.py`: dashboard state assembly.
+- `dashboard/views.py`: dashboard rendering.
+- `src/validation/prediction_store.py`: saved prediction stream helpers.
 
-Total Return
+## Limitations
 
-Win Rate
+- Results depend on the quality, completeness, and timestamp semantics of local CSV data.
+- Backtests use simplified transaction-cost and execution assumptions.
+- Liquidity, slippage, corporate actions, taxes, borrow constraints, and operational risk are not fully modelled.
+- Model performance can decay and must be monitored out of sample.
+- A strong backtest does not imply future profitability.
 
-Trading performance is always compared against Buy-and-Hold.
+## Development Checklist
 
- Technologies Used
+Before pushing changes:
 
-Python
+```bash
+python3 -m compileall -q dashboard src tests
+python3 -m pytest
+git diff --check
+```
 
-Pandas
-
-NumPy
-
-Scikit-learn
-
-Streamlit
-
-Plotly
-
-yfinance
-
-⚠ Disclaimer
-
-This project is intended for academic and research purposes only.
-
-The trading signals generated by the model should not be used for live financial trading without further validation and risk management.
+Review generated artifacts before committing them. Large model files and regenerated reports should be committed only when they are intentionally part of the project snapshot.

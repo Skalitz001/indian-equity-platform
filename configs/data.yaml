@@ -4,8 +4,10 @@ market: nse
 
 data_source: yfinance
 
-start_date: "2015-01-01"
+start_date: "2000-01-01"
 end_date: null
+incremental_update: true
+refresh_overlap_days: 10
 
 tickers:
 
@@ -22,6 +24,11 @@ tickers:
   - SBIN.NS
   - AXISBANK.NS
   - KOTAKBANK.NS
+
+  # Index Funds
+  - ^NSEI
+
+
 
 data_directory: data/raw
 
