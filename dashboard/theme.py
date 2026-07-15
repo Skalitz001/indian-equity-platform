@@ -122,6 +122,31 @@ def inject_dashboard_css():
             color: var(--muted);
         }
 
+        .prediction-check {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            color: var(--ink);
+            font-weight: 650;
+        }
+
+        .prediction-check__mark {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 1.25rem;
+            height: 1.25rem;
+            border-radius: 999px;
+            background: var(--up);
+            color: white;
+            font-size: 0.8rem;
+            line-height: 1;
+        }
+
+        .prediction-check--down .prediction-check__mark {
+            background: var(--down);
+        }
+
         div[data-baseweb="select"] > div,
         [data-testid="stDateInput"] input {
             border-radius: 12px;

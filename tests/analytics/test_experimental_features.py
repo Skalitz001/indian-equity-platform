@@ -59,10 +59,16 @@ def test_resolve_main_feature_columns_and_group_round_trip():
 
     paper_columns = resolve_main_feature_columns(DEFAULT_TRADING_FEATURE_GROUP)
 
-    assert DEFAULT_TRADING_FEATURE_GROUP == PAPER_CHANGEPOINT_FEATURE_GROUP
-    assert set(PAPER_CHANGEPOINT_FEATURE_COLUMNS).issubset(paper_columns)
-    assert paper_columns == PAPER_CHANGEPOINT_MODEL_FEATURE_COLUMNS
-    assert infer_main_feature_group(paper_columns) == PAPER_CHANGEPOINT_FEATURE_GROUP
+    assert DEFAULT_TRADING_FEATURE_GROUP == DEFAULT_CLASSIFICATION_FEATURE_GROUP
+    assert set(MARKET_CONTEXT_FEATURE_COLUMNS).issubset(paper_columns)
+    assert set(PAPER_CHANGEPOINT_FEATURE_COLUMNS).isdisjoint(paper_columns)
+    assert infer_main_feature_group(paper_columns) == DEFAULT_CLASSIFICATION_FEATURE_GROUP
+
+    changepoint_columns = resolve_main_feature_columns(PAPER_CHANGEPOINT_FEATURE_GROUP)
+
+    assert set(PAPER_CHANGEPOINT_FEATURE_COLUMNS).issubset(changepoint_columns)
+    assert changepoint_columns == PAPER_CHANGEPOINT_MODEL_FEATURE_COLUMNS
+    assert infer_main_feature_group(changepoint_columns) == PAPER_CHANGEPOINT_FEATURE_GROUP
 
 
 def test_build_main_feature_frame_supports_baseline_and_context_modes():
@@ -88,7 +94,7 @@ def test_build_main_feature_frame_supports_baseline_and_context_modes():
     )
     paper = build_main_feature_frame(
         df,
-        feature_group=DEFAULT_TRADING_FEATURE_GROUP,
+        feature_group=PAPER_CHANGEPOINT_FEATURE_GROUP,
     )
 
     assert len(context.columns) > len(baseline.columns)

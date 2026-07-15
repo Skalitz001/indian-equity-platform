@@ -11,10 +11,10 @@ The code is intended for research and education. It is not investment advice and
 
 ## Core Idea
 
-GIFT Nifty trades on Singapore market hours and can provide information before the Indian cash market opens. The GIFT-aware pipeline is therefore framed as a pre-open signal for the Indian session:
+GIFT Nifty's extended trading session can provide information before the Indian cash market opens. The GIFT-aware pipeline is therefore framed as a pre-open signal for the Indian session:
 
 - Stock-derived features are shifted by one session so they are known before the Indian open.
-- Same-date GIFT rows are treated as completed Singapore-time pre-open observations, available before the NSE cash session.
+- Same-date GIFT rows are treated as completed pre-open observations, available before the NSE cash session.
 - The target is same-day Indian equity `open -> close` direction, not next-day `close -> close` direction.
 - The model records `gift_source_age_days` so stale GIFT observations are visible to the classifier.
 
@@ -48,6 +48,36 @@ Model ranking prioritizes:
 3. Maximum drawdown.
 4. Win rate.
 5. Trade activity and tie-breakers.
+
+The main pipeline default feature group is `all_context`, a 35-feature set that
+keeps the base OHLCV indicators plus market-context features. The larger
+`paper_changepoint` group remains available for experiments and for existing
+artifacts, but it is no longer the default because the feature A/B run did not
+show a performance benefit from the extra changepoint columns.
+
+The GIFT-aware pipeline currently keeps its artifact-compatible
+`paper_changepoint` stock feature group because its separate intraday A/B run did
+not produce a clean no-loss replacement.
+
+## Evaluation Snapshot
+
+The latest saved walk-forward comparison covers 10 NSE equities and 641 aligned
+sessions per ticker from 2023-07-31 through 2026-03-20.
+
+| Metric | Aligned stock-only baseline | GIFT-aware pipeline |
+| --- | ---: | ---: |
+| Average daily Sharpe ratio | 0.027 | 0.154 |
+| Average F1 score | 0.462 | 0.582 |
+| Tickers won on the metric | - | 10 of 10 |
+
+The comparison uses the same intraday target, execution schedule, walk-forward
+splits, and 0.10% transaction-cost assumption for both feature sets. This avoids
+comparing the GIFT-aware intraday workflow with the main pipeline's different
+next-session target.
+
+These are historical out-of-fold research results with model and threshold
+selection performed inside the comparison workflow. They are not untouched
+live-trading results and should not be interpreted as a profitability claim.
 
 ## Repository Layout
 
@@ -102,6 +132,12 @@ Install dependencies:
 
 ```bash
 python3 -m pip install -r requirements.txt
+```
+
+For development, tests, and optional research benchmarks:
+
+```bash
+python3 -m pip install -r requirements-dev.txt
 ```
 
 Run the test suite:

@@ -79,10 +79,10 @@ def predict(
     ticker: str = Query(
         ...,
         description="NSE ticker symbol (e.g. RELIANCE.NS)",
-        example="RELIANCE.NS",
+        examples=["RELIANCE.NS"],
         min_length=3,
         max_length=20,
-        regex=r"^[A-Z0-9^]+\.NS$",
+        pattern=r"^[A-Z0-9^]+\.NS$",
     ),
     model_name: str = Query(
         "logistic",

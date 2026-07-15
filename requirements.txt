@@ -1,14 +1,9 @@
 pandas
 numpy
-yfinance
 requests
-pyyaml
-ta
 scikit-learn
+joblib
 fastapi
 uvicorn
 streamlit
 plotly
-xgboost
-lightgbm
-pytest

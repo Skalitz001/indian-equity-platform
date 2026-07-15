@@ -33,6 +33,21 @@ from src.analytics.performance import (
 )
 
 
+def _format_check_markdown(verification: str, prediction: str) -> str:
+    if verification != "Match":
+        return f"Check: `{verification}`"
+
+    direction_class = "down" if prediction == "DOWN" else "up"
+
+    return (
+        "Check: "
+        f'<span class="prediction-check prediction-check--{direction_class}">'
+        '<span class="prediction-check__mark" aria-hidden="true">&#10003;</span>'
+        '<span>Match</span>'
+        "</span>"
+    )
+
+
 @dataclass(frozen=True)
 class DashboardViewState:
     analysis_df: pd.DataFrame
@@ -291,7 +306,10 @@ def render_dashboard_tabs(state: DashboardViewState) -> None:
                         )
                     )
 
-                column.write(f"Check: `{row.verification}`")
+                column.markdown(
+                    _format_check_markdown(row.verification,row.prediction),
+                    unsafe_allow_html=True,
+                )
 
             display_outlook=three_day_outlook.copy()
 

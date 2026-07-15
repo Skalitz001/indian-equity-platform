@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 
 from src.analytics.experimental_features import (
-    DEFAULT_TRADING_FEATURE_GROUP,
+    PAPER_CHANGEPOINT_FEATURE_GROUP,
     build_main_feature_frame,
     resolve_main_feature_columns,
 )
@@ -10,11 +10,13 @@ from src.gift_nifty.constants import GIFT_NIFTY_START_DATE
 from src.gift_nifty.features import GIFT_FEATURE_COLUMNS, build_gift_feature_frame
 
 
-GIFT_STOCK_FEATURE_GROUP = DEFAULT_TRADING_FEATURE_GROUP
+# Keep GIFT on the artifact-compatible stock feature group until its intraday
+# target has a separate no-loss pruning result.
+GIFT_STOCK_FEATURE_GROUP = PAPER_CHANGEPOINT_FEATURE_GROUP
 GIFT_STOCK_FEATURE_COLUMNS = resolve_main_feature_columns(GIFT_STOCK_FEATURE_GROUP)
 GIFT_PRE_OPEN_SOURCE_ASSUMPTION = (
-    "Each GIFT Nifty Date row is treated as a completed pre-open Singapore-time "
-    "session that is available before the matching NSE cash-market session opens."
+    "Each GIFT Nifty Date row is treated as a completed pre-open observation "
+    "that is available before the matching NSE cash-market session opens."
 )
 
 GIFT_MODEL_FEATURE_COLUMNS = [

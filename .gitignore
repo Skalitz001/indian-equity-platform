@@ -59,6 +59,14 @@ artifacts/*
 # Notebook checkpoints
 .ipynb_checkpoints/
 
+# Local research documents and personal working files
+docs/
+.pdf-venv/
+*.pdf
+*.docx
+*.pptx
+*plagiarism_report*
+
 # OS and editor files
 .DS_Store
 Thumbs.db

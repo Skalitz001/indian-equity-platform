@@ -5,6 +5,7 @@ from src.analytics.changepoint_features import PAPER_CHANGEPOINT_FEATURE_COLUMNS
 from src.analytics.experimental_features import (
     DEFAULT_TRADING_FEATURE_GROUP,
     MARKET_CONTEXT_FEATURE_COLUMNS,
+    PAPER_CHANGEPOINT_FEATURE_GROUP,
     resolve_main_feature_columns,
 )
 from src.gift_nifty.dataset import (
@@ -79,10 +80,11 @@ def test_build_gift_model_frame_uses_previous_stock_features():
     assert (out["gift_source_age_days"] >= 0).all()
 
 
-def test_gift_stock_features_match_main_trading_feature_group():
-    assert GIFT_STOCK_FEATURE_GROUP == DEFAULT_TRADING_FEATURE_GROUP
+def test_gift_stock_features_stay_on_artifact_compatible_feature_group():
+    assert DEFAULT_TRADING_FEATURE_GROUP != PAPER_CHANGEPOINT_FEATURE_GROUP
+    assert GIFT_STOCK_FEATURE_GROUP == PAPER_CHANGEPOINT_FEATURE_GROUP
     assert GIFT_STOCK_FEATURE_COLUMNS == resolve_main_feature_columns(
-        DEFAULT_TRADING_FEATURE_GROUP,
+        GIFT_STOCK_FEATURE_GROUP,
     )
 
     stock_feature_columns = {
